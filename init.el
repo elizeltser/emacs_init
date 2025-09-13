@@ -33,8 +33,17 @@
 (column-number-mode)
 (global-display-line-numbers-mode t)
 
-(prefer-coding-system 'utf-8)
 (set-language-environment "UTF-8")
+(prefer-coding-system       'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(setq default-buffer-file-coding-system 'utf-8)
+
+;; Change backups to be stored in a directory
+(custom-set-variables
+ '(backup-directory-alist
+   `(("." . ,(concat user-emacs-directory "backups")))))
 
 ;; more easily keep track and manage user keybindings
 (require 'bind-key)
