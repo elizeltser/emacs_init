@@ -32,6 +32,10 @@
 (set-fringe-mode 10)
 (column-number-mode)
 (global-display-line-numbers-mode t)
+(setq mode-line-position
+      '((line-number-mode ("%l"))     ; show line number
+        (column-number-mode (":%c")))) ; show column number
+
 
 (set-language-environment "UTF-8")
 (prefer-coding-system       'utf-8)
@@ -129,3 +133,51 @@
                                 (project-root project)
                               default-directory)))
     (run-python (python-shell-parse-command) nil nil)))
+
+;; Vim like % to jump between parenthesis
+(defun goto-match-paren (arg)
+  "Go to the matching paren/bracket, otherwise (or if ARG is not
+    nil) insert %.  vi style of % jumping to matching brace."
+  (interactive "p")
+  (if (not (memq last-command '(set-mark
+                                cua-set-mark
+                                zz/goto-match-paren
+                                down-list
+                                up-list
+                                end-of-defun
+                                beginning-of-defun
+                                backward-sexp
+                                forward-sexp
+                                backward-up-list
+                                forward-paragraph
+                                backward-paragraph
+                                end-of-buffer
+                                beginning-of-buffer
+                                backward-word
+                                forward-word
+                                mwheel-scroll
+                                backward-word
+                                forward-word
+                                mouse-start-secondary
+                                mouse-yank-secondary
+                                mouse-secondary-save-then-kill
+                                move-end-of-line
+                                move-beginning-of-line
+                                backward-char
+                                forward-char
+                                scroll-up
+                                scroll-down
+                                scroll-left
+                                scroll-right
+                                mouse-set-point
+                                next-buffer
+                                previous-buffer
+                                previous-line
+                                next-line
+                                back-to-indentation
+                                )))
+      (self-insert-command (or arg 1))
+    (cond ((looking-at "\\s\(") (sp-forward-sexp) (backward-char 1))
+          ((looking-at "\\s\)") (forward-char 1) (sp-backward-sexp))
+          (t (self-insert-command (or arg 1))))))
+(bind-key "%" 'goto-match-paren)
