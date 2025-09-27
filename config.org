@@ -1,0 +1,203 @@
+#+TITLE: My Emacs Configuration
+#+AUTHOR: Eli Zeltser
+#+EMAIL: elizeltser97@gmail.com
+#+OPTIONS: num:nil
+* Packages
+Initialize package manager:
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
+
+(package-initialize)
+(unless package-archive-contents
+ (package-refresh-contents))
+
+(unless (package-installed-p 'use-package)
+   (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-always-ensure t)
+#+END_SRC
+
+* Basics
+Minimal UI improvements:
+#+BEGIN_SRC emacs-lisp
+(setq inhibit-startup-screen t
+      ring-bell-function 'ignore
+      confirm-kill-process nil)
+(delete-selection-mode 1)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(global-display-line-numbers-mode 1)
+(hl-line-mode 1)
+(tooltip-mode -1)
+(set-fringe-mode 10)
+(column-number-mode)
+(global-display-line-numbers-mode t)
+#+END_SRC
+Setting the encoding scheme:
+#+BEGIN_SRC emacs-lisp
+;; Always use UTF-8
+(set-language-environment "UTF-8")
+(prefer-coding-system 'utf-8)
+(setq default-buffer-file-coding-system 'utf-8)
+(setq locale-coding-system 'utf-8)
+(setq coding-system-for-read 'utf-8)
+(setq coding-system-for-write 'utf-8)
+;;  (prefer-coding-system       'utf-8)
+;;  (set-default-coding-systems 'utf-8)
+;;  (set-terminal-coding-system 'utf-8)
+;;  (set-keyboard-coding-system 'utf-8)
+
+#+END_SRC
+
+Change the storing location of the backups to a specific directory:
+#+BEGIN_SRC emacs-lisp
+(custom-set-variables
+ '(backup-directory-alist
+   `(("." . ,(concat user-emacs-directory "backups")))))
+#+END_SRC
+
+More easily keep track and manage user keybindings
+#+BEGIN_SRC emacs-lisp
+(require 'bind-key)
+#+END_SRC
+
+Code compl
+#+BEGIN_SRC emacs-lisp
+(setq dabbrev-case-fold-search t   ; A=a matches
+      dabbrev-case-replace nil)    ; keep the case you typed
+#+END_SRC
+
+Make ESC quit prompts
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+END_SRC
+
+which-key presents key-bindings in a more visual way:
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 0.3))
+#+END_SRC
+
+Fix dired so that it will not create extra buffers when navigating:
+#+BEGIN_SRC emacs-lisp
+(setq dired-kill-when-opening-new-dired-buffer t)
+#+END_SRC
+
+* Theme
+Load a single theme cleanly on startup
+#+begin_src emacs-lisp
+(mapc #'disable-theme custom-enabled-themes)
+(load-theme 'wombat t)
+#+end_src
+
+* Fonts
+Use fonts at 11pt everywhere
+#+BEGIN_SRC emacs-lisp
+;; Choose one: "Fira Code", "Cascadia Code", or "Cascadia Mono"
+(set-face-attribute 'default nil
+                    :family "Cascadia Mono"
+                    :height 140)
+;;  (set-face-attribute 'default nil :family "Consolas" :height 140)
+#+END_SRC
+
+If Consolas not found, fall back to Lucida Console
+#+BEGIN_SRC emacs-lisp
+(unless (member "Fira Code" (font-family-list))
+  (set-face-attribute 'default nil :family "Lucida Console"))
+(setq-default line-spacing 0.2)
+(global-font-lock-mode 1)
+#+END_SRC
+
+The package all-the-ipons should now make emacs support special characters:
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons)
+#+END_SRC
+Ligature package should make some special characters look nicer:
+#+BEGIN_SRC emacs-lisp
+(use-package ligature
+  :config
+  (ligature-set-ligatures 't '("www" "==" "===" "!=" "->" "=>" "::" ">>>"))
+  (global-ligature-mode t))
+#+END_SRC
+
+* Modeline
+Remove the location text in the mode line - only line number and column number remain.
+#+BEGIN_SRC emacs-lisp
+(setq mode-line-position
+      '((line-number-mode ("%l"))
+        (column-number-mode (":%c"))))
+#+END_SRC
+* Org mode
+Improving the look:
+#+BEGIN+SRC emacs-lisp
+(use-package org
+  :config
+  ;; Hide the actual markers (** etc.)
+  (setq org-hide-emphasis-markers t))
+#+END_SRC
+
+Set bullets to look nicer:
+#+begin_src emacs-lisp
+    ;;   (use-package org-bullets
+    ;;     :hook (org-mode . org-bullets-mode)
+    ;;     :config
+    ;;     (setq org-bullets-bullet-list '("•" "◦" "▸" "▪" "◆" "▶")))
+  (require 'org-bullets)
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+#+end_src
+
+* Development
+** Python Specific
+
+Set python interpreter explicitly globaly and for pyvenv
+#+BEGIN_SRC emacs-lisp
+(use-package pyvenv
+  :ensure t
+  :config
+  (pyvenv-mode t)
+
+  (setq python-shell-interpreter "C:\\Users\\eli.zeltser\\AppData\\Local\\Programs\\Python\\Python313\\python.exe")
+
+  (setq pyvenv-post-activate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter (concat pyvenv-virtual-env "Scripts/python.exe")))))
+  (setq pyvenv-post-deactivate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter "C:\\Users\\eli.zeltser\\AppData\\Local\\Programs\\Python\\Python313\\python.exe")))))
+#+END_SRC
+
+Usefull keybinding for killing python REPL buffer.
+#+BEGIN_SRC emacs-lisp
+(defun kill-python-buffer-no-confirm ()
+  "Kill the *Python* buffer without confirmation if it exists."
+  (interactive)
+  (let ((buffer (get-buffer "*Python*")))
+    (when buffer
+      (let ((kill-buffer-query-functions nil)) ; Disable confirmation
+        (kill-buffer buffer)))))
+
+;; Optionally bind it to a key for convenience
+(global-set-key (kbd "C-c k p") 'kill-python-buffer-no-confirm)
+#+END_SRC
+
+Launch Python Shell in Project Root
+#+BEGIN_SRC emacs-lisp
+(defun my-run-python-in-project-root ()
+  "Start Python interpreter in the project root using project.el."
+  (interactive)
+  (let* ((project (project-current))
+         (default-directory (if project
+                                (project-root project)
+                              default-directory)))
+    (run-python (python-shell-parse-command) nil nil)))
+(global-set-key (kbd "C-c C-p") 'my-run-python-in-project-root)
+#+END_SRC
