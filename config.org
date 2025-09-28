@@ -147,11 +147,9 @@ Improving the look:
 
 Set bullets to look nicer:
 #+begin_src emacs-lisp
-    ;;   (use-package org-bullets
-    ;;     :hook (org-mode . org-bullets-mode)
-    ;;     :config
     ;;     (setq org-bullets-bullet-list '("•" "◦" "▸" "▪" "◆" "▶")))
-  (require 'org-bullets)
+(use-package org-bullets
+  :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 #+end_src
 
